@@ -54,9 +54,8 @@ func (l *RedisEventListener) processMessage(message *redis.Message) {
 	}
 
 	for _, handler := range eventHandlers {
-		handler := handler
-		go func() {
+		go func(handler EventHandler) {
 			_ = handler.Handle(message.Payload)
-		}()
+		}(handler)
 	}
 }

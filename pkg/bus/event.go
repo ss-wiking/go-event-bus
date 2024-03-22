@@ -2,7 +2,6 @@ package bus
 
 import (
 	"github.com/google/uuid"
-	"reflect"
 	"time"
 )
 
@@ -10,7 +9,7 @@ import (
 type Dispatchable interface {
 	SetId(uuid.UUID)
 	SetCreatedAt(time.Time)
-	SetEventName(reflect.Type)
+	SetEventName(name string)
 }
 
 type Event struct {
@@ -27,6 +26,6 @@ func (e *Event) SetCreatedAt(t time.Time) {
 	e.CreatedAt = t
 }
 
-func (e *Event) SetEventName(rt reflect.Type) {
-	e.EventName = rt.Elem().Name()
+func (e *Event) SetEventName(name string) {
+	e.EventName = name
 }

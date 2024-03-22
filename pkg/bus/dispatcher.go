@@ -42,6 +42,7 @@ func (d *RedisEventDispatcher) prepareMessage(dispatchable Dispatchable) ([]byte
 	// Set some mandatory fields (maybe it will best practice to store this in ctx)
 	dispatchable.SetId(uuid.New())
 	dispatchable.SetCreatedAt(time.Now().UTC())
+	dispatchable.SetEventName(RecognizeEventName(dispatchable))
 
 	// JSON encode
 	prepared, err := json.Marshal(dispatchable)
