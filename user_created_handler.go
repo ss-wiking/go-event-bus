@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/ss-wiking/go-event-bus/pkg/bus"
 )
 
 type UserCreatedHandler struct {
@@ -10,10 +10,8 @@ type UserCreatedHandler struct {
 }
 
 func (h *UserCreatedHandler) Handle(message string) error {
-	// decode message to the struct
 	event := new(UserCreatedEvent)
-
-	err := json.Unmarshal([]byte(message), &event)
+	err := bus.DecodeMessage(&message, event)
 
 	if err != nil {
 		return err
