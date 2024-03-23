@@ -1,55 +1,33 @@
 package main
 
 import (
-	"fmt"
-	"github.com/redis/go-redis/v9"
-	"github.com/ss-wiking/go-event-bus/pkg/bus"
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/ss-wiking/go-event-bus/internal/app"
+	redisbus "github.com/ss-wiking/go-event-bus/pkg/bus/redis"
+	"os"
+	"sync"
 	"time"
 )
 
-const (
-	QueueName = "event-bus"
-)
-
-var events = []bus.Dispatchable{
-	&UserCreatedEvent{
-		UserId: 1234,
-	},
-	&UserCreatedEvent{
-		UserId: 5678,
-	},
-}
-
 func main() {
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
+	queueName := os.Getenv("QUEUE_NAME")
+	client := app.InitRedisClient()
 
-	listener := bus.NewEventListener(client, GetHandlersList())
+	listener := redisbus.NewEventListener(client, app.GetHandlersList())
 
-	// listen channel async
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
-		err := listener.Listen(QueueName)
-		if err != nil {
-			fmt.Println(err)
-		}
+		defer wg.Done()
+		listener.Listen(queueName)
 	}()
 
-	dispatcher := bus.NewEventDispatcher(client, QueueName)
+	dispatcher := redisbus.NewEventDispatcher(client)
 
-	for _, event := range events {
-		go func(event bus.Dispatchable) {
-			err := dispatcher.Dispatch(event)
-			if err != nil {
-				fmt.Println("Error occurred")
-				fmt.Println(err)
-			} else {
-				fmt.Println("Event pushed")
-			}
-		}(event)
-	}
-
-	time.Sleep(10 * time.Second)
+	app.SpamEvents(
+		dispatcher,
+		queueName,
+		10,
+		500*time.Millisecond,
+	)
 }
